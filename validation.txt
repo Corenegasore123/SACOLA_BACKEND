@@ -1,0 +1,523 @@
+JWT Authorization Guide for Frontend Integration
+===============================================
+
+Base URL: https://sacola-backend-test.onrender.com/
+
+STEP 1: USER REGISTRATION
+-------------------------
+POST /auth/register
+Body: {
+  "email": "user@example.com",
+  "password": "securepassword123",
+  "name": "John Doe",
+  "firstName": "John",
+  "lastName": "Doe",
+  "role": "USER"
+}
+
+Response: {
+  "success": true,
+  "message": "User registered successfully"
+}
+
+STEP 2: INITIATE LOGIN (GET OTP)
+--------------------------------
+POST /auth/login
+Body: {
+  "email": "user@example.com",
+  "password": "securepassword123"
+}
+
+Response: {
+  "success": true,
+  "statusCode": 200,
+  "data": {
+    "message": "OTP sent to your email",
+    "otp": "567839"
+  }
+}
+
+STEP 3: VERIFY OTP (GET JWT TOKEN)
+----------------------------------
+POST /auth/verify-otp
+Body: {
+  "email": "user@example.com",
+  "otp": "567839"
+}
+
+Response: {
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": "uuid",
+    "email": "user@example.com",
+    "name": "John Doe",
+    "role": "USER"
+  }
+}
+
+STEP 4: STORE JWT TOKEN
+-----------------------
+// Store the accessToken securely
+localStorage.setItem('accessToken', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...');
+
+// Alternative: Use sessionStorage for session-only storage
+sessionStorage.setItem('accessToken', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...');
+
+STEP 5: SETUP API CLIENT WITH JWT
+---------------------------------
+// Using Axios
+import axios from 'axios';
+
+const apiClient = axios.create({
+  baseURL: 'https://sacola-backend-test.onrender.com',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Add request interceptor to automatically include JWT
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem('accessToken');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Add response interceptor for token expiry handling
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error.response?.status === 401) {
+      // Token expired or invalid
+      localStorage.removeItem('accessToken');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
+// Using Fetch API
+const fetchWithAuth = async (url, options = {}) => {
+  const token = localStorage.getItem('accessToken');
+  
+  const config = {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  };
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  const response = await fetch(`https://sacola-backend-test.onrender.com${url}`, config);
+  
+  if (response.status === 401) {
+    localStorage.removeItem('accessToken');
+    window.location.href = '/login';
+    throw new Error('Unauthorized');
+  }
+
+  return response;
+};
+
+STEP 6: MAKE AUTHENTICATED API CALLS
+------------------------------------
+// Example: Get user profile
+const getProfile = async () => {
+  try {
+    const response = await apiClient.get('/api/users/me');
+    return response.data;
+  } catch (error) {
+    console.error('Profile fetch error:', error);
+    throw error;
+  }
+};
+
+// Example: Create bamboo plantation
+const createBamboo = async (data) => {
+  try {
+    const response = await apiClient.post('/api/conservation/bamboo', {
+      distanceCovered: 100,
+      location: 'Some Location',
+      datePlanted: '2024-01-15',
+      description: 'Bamboo plantation project'
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Bamboo creation error:', error);
+    throw error;
+  }
+};
+
+// Example: Get all bamboo plantations
+const getBambooPlantations = async (params = {}) => {
+  try {
+    const queryString = new URLSearchParams(params).toString();
+    const response = await apiClient.get(`/api/conservation/bamboo?${queryString}`);
+    return response.data;
+  } catch (error) {
+    console.error('Bamboo fetch error:', error);
+    throw error;
+  }
+};
+
+STEP 7: REACT CONTEXT SETUP (OPTIONAL)
+--------------------------------------
+// AuthContext.js
+import React, { createContext, useContext, useState, useEffect } from 'react';
+
+const AuthContext = createContext();
+
+export const AuthProvider = ({ children }) => {
+  const [token, setToken] = useState(localStorage.getItem('accessToken'));
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Check if token exists and validate it
+    const validateToken = async () => {
+      const storedToken = localStorage.getItem('accessToken');
+      if (storedToken) {
+        try {
+          const response = await fetch('https://sacola-backend-test.onrender.com/api/users/me', {
+            headers: {
+              'Authorization': `Bearer ${storedToken}`
+            }
+          });
+          if (response.ok) {
+            const userData = await response.json();
+            setUser(userData);
+            setToken(storedToken);
+          } else {
+            // Token invalid, clear it
+            localStorage.removeItem('accessToken');
+            setToken(null);
+            setUser(null);
+          }
+        } catch (error) {
+          localStorage.removeItem('accessToken');
+          setToken(null);
+          setUser(null);
+        }
+      }
+      setLoading(false);
+    };
+
+    validateToken();
+  }, []);
+
+  const login = (accessToken, userData) => {
+    setToken(accessToken);
+    setUser(userData);
+    localStorage.setItem('accessToken', accessToken);
+  };
+
+  const logout = async () => {
+    try {
+      // Call logout endpoint
+      await fetch('https://sacola-backend-test.onrender.com/auth/logout', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setToken(null);
+      setUser(null);
+      localStorage.removeItem('accessToken');
+    }
+  };
+
+  return (
+    <AuthContext.Provider value={{ token, user, login, logout, loading }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => useContext(AuthContext);
+
+STEP 8: PROTECTED ROUTES
+------------------------
+// ProtectedRoute.js
+import { useAuth } from './AuthContext';
+import { Navigate } from 'react-router-dom';
+
+const ProtectedRoute = ({ children }) => {
+  const { token, loading } = useAuth();
+  
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+  
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  return children;
+};
+
+STEP 9: LOGIN COMPONENT EXAMPLE
+-------------------------------
+// LoginComponent.js
+import { useState } from 'react';
+import { useAuth } from './AuthContext';
+
+const LoginComponent = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [otp, setOtp] = useState('');
+  const [showOtp, setShowOtp] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      const response = await fetch('https://sacola-backend-test.onrender.com/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setShowOtp(true);
+        alert(`OTP sent: ${data.data.otp}`);
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      alert('Login failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOtpVerification = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      const response = await fetch('https://sacola-backend-test.onrender.com/auth/verify-otp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, otp }),
+      });
+      
+      const data = await response.json();
+      
+      if (data.accessToken) {
+        login(data.accessToken, data.user);
+        // Redirect to dashboard
+        window.location.href = '/dashboard';
+      }
+    } catch (error) {
+      console.error('OTP verification error:', error);
+      alert('OTP verification failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div>
+      {!showOtp ? (
+        <form onSubmit={handleLogin}>
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          <button type="submit" disabled={loading}>
+            {loading ? 'Sending OTP...' : 'Login'}
+          </button>
+        </form>
+      ) : (
+        <form onSubmit={handleOtpVerification}>
+          <input
+            type="text"
+            placeholder="Enter OTP"
+            value={otp}
+            onChange={(e) => setOtp(e.target.value)}
+            required
+          />
+          <button type="submit" disabled={loading}>
+            {loading ? 'Verifying...' : 'Verify OTP'}
+          </button>
+        </form>
+      )}
+    </div>
+  );
+};
+
+STEP 10: PASSWORD RESET FLOW
+----------------------------
+// Request password reset
+const requestPasswordReset = async (email) => {
+  try {
+    const response = await fetch('https://sacola-backend-test.onrender.com/auth/request-reset', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email }),
+    });
+    
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Password reset request error:', error);
+    throw error;
+  }
+};
+
+// Reset password with OTP
+const resetPasswordWithOtp = async (email, otp, newPassword) => {
+  try {
+    const response = await fetch('https://sacola-backend-test.onrender.com/auth/reset-password-otp', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, otp, newPassword }),
+    });
+    
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Password reset error:', error);
+    throw error;
+  }
+};
+
+STEP 11: ERROR HANDLING
+-----------------------
+// Common error responses
+const handleApiError = (error) => {
+  if (error.response) {
+    switch (error.response.status) {
+      case 401:
+        // Unauthorized - token expired or invalid
+        localStorage.removeItem('accessToken');
+        window.location.href = '/login';
+        break;
+      case 403:
+        // Forbidden - insufficient permissions
+        alert('You do not have permission to perform this action');
+        break;
+      case 404:
+        // Not found
+        alert('Resource not found');
+        break;
+      case 422:
+        // Validation error
+        const errors = error.response.data.errors;
+        alert(`Validation errors: ${JSON.stringify(errors)}`);
+        break;
+      case 500:
+        // Server error
+        alert('Server error occurred. Please try again later.');
+        break;
+      default:
+        alert('An error occurred. Please try again.');
+    }
+  } else if (error.request) {
+    // Network error
+    alert('Network error. Please check your connection.');
+  } else {
+    // Other error
+    alert('An unexpected error occurred.');
+  }
+};
+
+STEP 12: SECURITY BEST PRACTICES
+--------------------------------
+1. Store tokens securely:
+   - Use httpOnly cookies when possible
+   - Avoid storing sensitive data in localStorage for production
+   - Consider token refresh mechanisms
+
+2. Token expiration:
+   - JWT tokens expire after 10 hours (as per auth.service.ts)
+   - Implement automatic logout on expiry
+   - Consider implementing refresh tokens
+
+3. HTTPS only:
+   - Always use HTTPS in production
+   - Never send tokens over HTTP
+
+4. Input validation:
+   - Validate all user inputs
+   - Sanitize data before sending to API
+
+5. Error handling:
+   - Don't expose sensitive information in error messages
+   - Log errors appropriately
+   - Handle network failures gracefully
+
+STEP 13: TESTING AUTHENTICATION
+-------------------------------
+// Test if token is valid
+const testAuth = async () => {
+  try {
+    const response = await fetch('https://sacola-backend-test.onrender.com/api/users/me', {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+      }
+    });
+    
+    if (response.ok) {
+      const userData = await response.json();
+      console.log('Authentication successful:', userData);
+      return true;
+    } else {
+      console.log('Authentication failed');
+      return false;
+    }
+  } catch (error) {
+    console.error('Auth test error:', error);
+    return false;
+  }
+};
+
+// Test API endpoint
+const testApiEndpoint = async () => {
+  try {
+    const response = await fetch('https://sacola-backend-test.onrender.com/api/conservation/bamboo', {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+      }
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      console.log('API test successful:', data);
+    } else {
+      console.log('API test failed:', response.status);
+    }
+  } catch (error) {
+    console.error('API test error:', error);
+  }
+};

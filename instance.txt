@@ -1,0 +1,304 @@
+TROUBLESHOOTING CHECKLIST
+-------------------------
+
+1. ✅ Check if datePlanted is a string in your form data
+2. ✅ Convert string to Date object using new Date(dateString)
+3. ✅ Validate the date is valid before sending
+4. ✅ Check browser console for the exact error message
+5. ✅ Ensure your form input type="date" is working correctly
+6. ✅ Verify the date format being sent (should be ISO string)
+7. ✅ Test with a hardcoded date first to isolate the issue
+
+SOLUTION 11: DATE OBJECT SERIALIZATION ISSUE
+--------------------------------------------
+
+// If you're getting "datePlanted must be a Date instance" even when sending Date objects
+
+// PROBLEM: Date objects get serialized to strings during HTTP transmission
+// SOLUTION: Convert to ISO string or use proper date formatting
+
+// Method 1: Convert to ISO String (Recommended)
+const createTreePlanting = async (data) => {
+  try {
+    const response = await apiClient.post('/api/conservation/tree-planting', {
+      treeType: data.treeType,
+      location: data.location,
+      numberOfTrees: Number(data.numberOfTrees),
+      datePlanted: data.datePlanted.toISOString(), // Convert Date to ISO string
+      description: data.description,
+      targetBeneficiaries: Number(data.targetBeneficiaries),
+      currentBeneficiaries: Number(data.currentBeneficiaries)
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Tree planting creation error:', error);
+    throw error;
+  }
+};
+
+// Method 2: Use ISO String format directly
+const createTreePlanting = async (data) => {
+  try {
+    // Ensure datePlanted is in ISO format
+    let datePlanted;
+    if (data.datePlanted instanceof Date) {
+      datePlanted = data.datePlanted.toISOString();
+    } else if (typeof data.datePlanted === 'string') {
+      // If it's already a string, validate and convert
+      const date = new Date(data.datePlanted);
+      if (isNaN(date.getTime())) {
+        throw new Error('Invalid date format');
+      }
+      datePlanted = date.toISOString();
+    } else {
+      throw new Error('datePlanted must be a valid date');
+    }
+
+    const response = await apiClient.post('/api/conservation/tree-planting', {
+      treeType: data.treeType,
+      location: data.location,
+      numberOfTrees: Number(data.numberOfTrees),
+      datePlanted: datePlanted, // ISO string format
+      description: data.description,
+      targetBeneficiaries: Number(data.targetBeneficiaries),
+      currentBeneficiaries: Number(data.currentBeneficiaries)
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Tree planting creation error:', error);
+    throw error;
+  }
+};
+
+// Method 3: Handle timezone issues
+const createTreePlanting = async (data) => {
+  try {
+    // Handle timezone conversion properly
+    let datePlanted;
+    if (data.datePlanted instanceof Date) {
+      // Get the date in local timezone without time
+      const year = data.datePlanted.getFullYear();
+      const month = String(data.datePlanted.getMonth() + 1).padStart(2, '0');
+      const day = String(data.datePlanted.getDate()).padStart(2, '0');
+      datePlanted = `${year}-${month}-${day}`;
+    } else if (typeof data.datePlanted === 'string') {
+      datePlanted = data.datePlanted;
+    } else {
+      throw new Error('datePlanted must be a valid date');
+    }
+
+    const response = await apiClient.post('/api/conservation/tree-planting', {
+      treeType: data.treeType,
+      location: data.location,
+      numberOfTrees: Number(data.numberOfTrees),
+      datePlanted: datePlanted, // YYYY-MM-DD format
+      description: data.description,
+      targetBeneficiaries: Number(data.targetBeneficiaries),
+      currentBeneficiaries: Number(data.currentBeneficiaries)
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Tree planting creation error:', error);
+    throw error;
+  }
+};
+
+SOLUTION 12: COMPLETE TREE PLANTING FIX
+---------------------------------------
+
+// Complete working solution for tree planting with proper date handling
+
+const handleCreateEntry = async (formData) => {
+  try {
+    // Validate and format the date properly
+    let formattedDate;
+    
+    if (formData.datePlanted instanceof Date) {
+      // If it's already a Date object, convert to ISO string
+      formattedDate = formData.datePlanted.toISOString().split('T')[0]; // YYYY-MM-DD
+    } else if (typeof formData.datePlanted === 'string') {
+      // If it's a string, validate it's a proper date
+      const date = new Date(formData.datePlanted);
+      if (isNaN(date.getTime())) {
+        throw new Error('Invalid date format for date planted');
+      }
+      formattedDate = date.toISOString().split('T')[0]; // YYYY-MM-DD
+    } else {
+      throw new Error('datePlanted must be a valid date');
+    }
+
+    const payload = {
+      treeType: formData.treeType,
+      location: formData.location,
+      numberOfTrees: Number(formData.numberOfTrees),
+      datePlanted: formattedDate, // Use formatted date string
+      description: formData.description,
+      targetBeneficiaries: Number(formData.targetBeneficiaries),
+      currentBeneficiaries: Number(formData.currentBeneficiaries)
+    };
+
+    console.log('Sending payload:', payload); // Debug log
+
+    const result = await createTreePlanting(payload);
+    console.log('Tree planting created successfully:', result);
+    return result;
+  } catch (error) {
+    console.error('Failed to create tree planting entry:', error);
+    throw error;
+  }
+};
+
+// Updated API function
+const createTreePlanting = async (data) => {
+  try {
+    const response = await apiClient.post('/api/conservation/tree-planting', data);
+    return response.data;
+  } catch (error) {
+    console.error('Tree planting creation error:', error);
+    throw error;
+  }
+};
+
+SOLUTION 13: DEBUGGING DATE ISSUES
+----------------------------------
+
+// Add this debugging code to see exactly what's being sent
+
+const debugDateIssue = (formData) => {
+  console.log('=== DATE DEBUGGING ===');
+  console.log('Original datePlanted:', formData.datePlanted);
+  console.log('Type of datePlanted:', typeof formData.datePlanted);
+  console.log('Is Date instance:', formData.datePlanted instanceof Date);
+  
+  if (formData.datePlanted instanceof Date) {
+    console.log('Date methods:');
+    console.log('- getTime():', formData.datePlanted.getTime());
+    console.log('- toISOString():', formData.datePlanted.toISOString());
+    console.log('- toString():', formData.datePlanted.toString());
+    console.log('- toDateString():', formData.datePlanted.toDateString());
+  }
+  
+  console.log('=====================');
+};
+
+// Use in your form submission
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  
+  // Debug the date
+  debugDateIssue(formData);
+  
+  try {
+    await handleCreateEntry(formData);
+    // Success handling
+  } catch (error) {
+    console.error('Error:', error);
+    alert(`Error: ${error.message}`);
+  }
+};
+
+SOLUTION 14: ALTERNATIVE DATE FORMATS
+-------------------------------------
+
+// If the backend expects different date formats, try these alternatives:
+
+// Option 1: Unix timestamp
+datePlanted: data.datePlanted.getTime()
+
+// Option 2: Date string without time
+datePlanted: data.datePlanted.toDateString()
+
+// Option 3: Custom format
+datePlanted: `${data.datePlanted.getFullYear()}-${String(data.datePlanted.getMonth() + 1).padStart(2, '0')}-${String(data.datePlanted.getDate()).padStart(2, '0')}`
+
+// Option 4: UTC date
+datePlanted: data.datePlanted.toUTCString()
+
+// Test each format to see which one the backend accepts
+
+INTEGRATION GUIDE: DATE HANDLING
+--------------------------------
+
+Overview
+- The backend now accepts date inputs as ISO strings (recommended), timestamps, or Date objects (which serialize to ISO strings over HTTP). All DTOs transform these into Date and validate.
+- Most business dates are validated as not-in-the-future. Report date ranges accept any valid dates.
+
+Accepted formats
+- ISO Date (YYYY-MM-DD): "2024-01-15" (recommended for date-only fields)
+- ISO DateTime: "2024-01-15T00:00:00.000Z" (acceptable)
+- Unix timestamp (number): 1705276800000
+
+Common payload examples
+- Tree Planting (datePlanted)
+{
+  "treeType": "Acacia",
+  "location": "Sector A",
+  "numberOfTrees": 120,
+  "datePlanted": "2024-01-15", // or full ISO or timestamp
+  "description": "Community planting",
+  "targetBeneficiaries": 300,
+  "currentBeneficiaries": 120
+}
+
+- Bamboo Plantation (datePlanted)
+{
+  "distanceCovered": 2.4,
+  "location": "Zone 3",
+  "datePlanted": "2024-02-10",
+  "description": "Phase I"
+}
+
+- Water Tanks (dateDonated)
+{
+  "tankType": "10,000L",
+  "location": "Village X",
+  "numberOfTanks": 4,
+  "dateDonated": "2024-03-20",
+  "description": "Donated by partner",
+  "targetBeneficiaries": 500,
+  "currentBeneficiaries": 280
+}
+
+- Socio-Economic examples (dateBuilt/date/dateDonated)
+{
+  "officeName": "Field Office",
+  "location": "Block B",
+  "dateBuilt": "2023-11-05",
+  "description": "New site"
+}
+{
+  "materialType": "Roofing Sheets",
+  "location": "Hilltop",
+  "distributedMaterials": 120,
+  "dateDonated": "2024-04-01"
+}
+
+Report generation date range
+{
+  "projectCategory": "Conservation", // or "Socio-Economic"
+  "projectType": "tree-planting",
+  "reportType": "Custom", // Annual | Monthly | Custom
+  "dateRangeStart": "2024-01-01",
+  "dateRangeEnd": "2024-03-31"
+}
+
+Validation rules (summary)
+- All date fields must parse to a valid Date.
+- Most action dates cannot be in the future (e.g., datePlanted, dateDonated, dateBuilt).
+- Empty strings are treated as null for optional fields.
+- Invalid formats return 400 with a descriptive message.
+
+Frontend tips
+- Prefer sending date-only values in YYYY-MM-DD when you don’t need time.
+- If using <input type="date">, send the raw value (YYYY-MM-DD) or convert to Date and then to ISO.
+- Example conversion:
+const d = new Date(form.datePlanted);
+if (Number.isNaN(d.getTime())) throw new Error('Invalid date');
+const payload = { ...form, datePlanted: d.toISOString().split('T')[0] };
+
+Troubleshooting
+- If you see 400 errors about dates:
+  1) Log the outbound payload to confirm the exact date string/number.
+  2) Ensure the format is ISO (YYYY-MM-DD or full ISO) or a numeric timestamp.
+  3) Check the date is not in the future for business fields.
+  4) Remove empty strings for optional dates (send null/omit instead).

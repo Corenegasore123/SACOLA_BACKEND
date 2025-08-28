@@ -1,0 +1,529 @@
+Sacola API - Endpoints and Entities for Frontend Integration
+
+Base URL: https://sacola-backend-test.onrender.com/
+Auth: Most endpoints under api/** require Bearer JWT. Auth endpoints under /auth are public unless noted.
+
+Authentication (AuthController) - /auth
+- POST /auth/register: Register user
+  Body: { email, password, name?, firstName?, lastName?, role? }
+- POST /auth/login: Start login (sends OTP)
+  Body: { email, password }
+  200 example: { success, statusCode, data: { message, otp } }
+- POST /auth/verify-otp: Complete login with OTP
+  Body: { email, otp }
+  Returns: { accessToken, user }
+- POST /auth/logout (auth): Invalidate token
+- POST /auth/change-password (auth): Change current password
+  Body: { currentPassword, newPassword, confirmNewPassword }
+- POST /auth/request-reset: Send reset OTP
+  Body: { email }
+- POST /auth/forgot-password: Initiate legacy reset
+  Body: { email }
+- POST /auth/reset-password: Reset via token + OTP
+  Body: { email, token, otp, newPassword, confirmNewPassword }
+- POST /auth/verify-reset-token: Verify reset token + OTP
+  Body: { email, token, otp }
+- POST /auth/update-password: Update password by email and new values
+  Query: email
+  Body: { newPassword, confirmNewPassword }
+- GET /auth/profile (auth): Current user profile
+
+Profile (ProfileController) - /api/users (auth)
+- GET /api/users/me: Get current user basic profile
+- PUT /api/users/me/password: Change password
+  Body: { currentPassword, newPassword, confirmNewPassword }
+
+Reports (ReportsController) - /api/reports (auth)
+- POST /api/reports/generate: Generate report
+  Body: { projectCategory: 'Conservation'|'Socio-Economic', projectType, reportType: 'Annual'|'Monthly'|'Custom', dateRangeStart, dateRangeEnd }
+- GET /api/reports: List my reports
+- GET /api/reports/:id: Get report by id
+- GET /api/reports/:id/download: Download report file
+
+Conservation - Common patterns (auth)
+List endpoints accept optional query: page, limit, location, startDate, endDate (and specific fields per controller).
+- Bamboo Plantation (/api/conservation/bamboo)
+  - POST /api/conservation/bamboo: Create bamboo record
+    Body: { distanceCovered, location, datePlanted, description? }
+  - GET /api/conservation/bamboo: List bamboo records
+  - GET /api/conservation/bamboo/:id: Get one
+  - PUT /api/conservation/bamboo/:id: Update
+    Body: same as create
+  - DELETE /api/conservation/bamboo/:id: Delete
+  - GET /api/conservation/bamboo/stats: Stats
+- Water Tanks (/api/conservation/water-tanks)
+  - POST /api/conservation/water-tanks: Create
+    Body: { tankType, location, numberOfTanks, dateDonated, description?, targetBeneficiaries, currentBeneficiaries }
+  - GET /api/conservation/water-tanks: List
+  - GET /api/conservation/water-tanks/:id: Get one
+  - PUT /api/conservation/water-tanks/:id: Update
+  - DELETE /api/conservation/water-tanks/:id: Delete
+  - GET /api/conservation/water-tanks/stats: Stats
+- Tree Planting (/api/conservation/tree-planting)
+  - POST /api/conservation/tree-planting: Create
+    Body: { treeType, location, numberOfTrees, datePlanted, description?, targetBeneficiaries, currentBeneficiaries }
+  - GET /api/conservation/tree-planting: List
+  - GET /api/conservation/tree-planting/:id: Get one
+  - PUT /api/conservation/tree-planting/:id: Update
+  - DELETE /api/conservation/tree-planting/:id: Delete
+  - GET /api/conservation/tree-planting/stats: Stats
+- Buffalo Wall (/api/conservation/buffalo-wall)
+  - POST /api/conservation/buffalo-wall: Create
+    Body: { dateRepaired, cost }
+  - GET /api/conservation/buffalo-wall: List (supports page, limit, location, startDate, endDate)
+  - GET /api/conservation/buffalo-wall/:id: Get one
+  - PUT /api/conservation/buffalo-wall/:id: Update
+  - DELETE /api/conservation/buffalo-wall/:id: Delete
+  - GET /api/conservation/buffalo-wall/stats: Stats
+- EU Funded Projects (/api/conservation/eu-projects)
+  - POST /api/conservation/eu-projects: Create
+    Body: { district, location, numberOfTrees, datePlanted, description?, targetBeneficiaries, currentBeneficiaries }
+  - GET /api/conservation/eu-projects: List (supports page, limit, location, district, startDate, endDate)
+  - GET /api/conservation/eu-projects/:id: Get one
+  - PUT /api/conservation/eu-projects/:id: Update
+  - DELETE /api/conservation/eu-projects/:id: Delete
+  - GET /api/conservation/eu-projects/stats: Stats
+- Conservation Projects (/api/conservation/projects)
+  - POST /api/conservation/projects: Create
+    Body: { name, description?, location, startDate?, endDate?, status?, budget?, contactPerson?, contactEmail?, contactPhone?, notes? }
+  - GET /api/conservation/projects: List (supports page, limit, name, location, startDate, endDate, status, sortBy, sortOrder)
+  - GET /api/conservation/projects/:id: Get one
+  - PUT /api/conservation/projects/:id: Update
+  - DELETE /api/conservation/projects/:id: Delete
+  - GET /api/conservation/projects/stats: Stats
+- Custom Projects (/api/conservation/other)
+  - POST /api/conservation/other: Create project
+    Body: { projectName, location, startingDate, description?, entries?[] }
+  - GET /api/conservation/other: List (page, limit, location, startDate, endDate)
+  - GET /api/conservation/other/:id: Get one
+  - PUT /api/conservation/other/:id: Update project
+    Body: same as create
+  - DELETE /api/conservation/other/:id: Delete project
+  - POST /api/conservation/other/:id/entries: Add project entry
+    Body: { name, number }
+  - PUT /api/conservation/other/:id/entries/:entryId: Update entry
+    Body: { name, number }
+  - DELETE /api/conservation/other/:id/entries/:entryId: Remove entry
+  - GET /api/conservation/other/stats: Stats
+
+Socio-Economic - Common CRUD (auth)
+Each controller exposes: POST /, GET /, GET /:id, PUT /:id, DELETE /:id
+- Education Infrastructures (/api/socio-economic/education/infrastructures)
+  - POST /api/socio-economic/education/infrastructures: Create
+  - GET /api/socio-economic/education/infrastructures: List
+  - GET /api/socio-economic/education/infrastructures/:id: Get one
+  - PUT /api/socio-economic/education/infrastructures/:id: Update
+  - DELETE /api/socio-economic/education/infrastructures/:id: Delete
+  Create body: { schoolName, location, infrastructureType, dateDonated, description? }
+- Education Materials (/api/socio-economic/education/materials)
+  - POST /api/socio-economic/education/materials: Create
+  - GET /api/socio-economic/education/materials: List
+  - GET /api/socio-economic/education/materials/:id: Get one
+  - PUT /api/socio-economic/education/materials/:id: Update
+  - DELETE /api/socio-economic/education/materials/:id: Delete
+  Create body: { materialType, location, distributedMaterials, dateDonated, targetBeneficiaries, currentBeneficiaries, description? }
+- Education Supported Students (/api/socio-economic/education/students)
+  - POST /api/socio-economic/education/students: Create
+  - GET /api/socio-economic/education/students: List
+  - GET /api/socio-economic/education/students/:id: Get one
+  - PUT /api/socio-economic/education/students/:id: Update
+  - DELETE /api/socio-economic/education/students/:id: Delete
+  Create body: { studentName, studentLocation, schoolName, schoolLocation, class, fundingYears, supportAmount, date, description? }
+- IT Training (/api/socio-economic/it-training)
+  - POST /api/socio-economic/it-training: Create
+  - GET /api/socio-economic/it-training: List
+  - GET /api/socio-economic/it-training/:id: Get one
+  - PUT /api/socio-economic/it-training/:id: Update
+  - DELETE /api/socio-economic/it-training/:id: Delete
+  Create body: { name, location, numPeople, materials?, trainingDuration?, date, description? }
+- Health Centres (/api/socio-economic/health-centres)
+  - POST /api/socio-economic/health-centres: Create
+  - GET /api/socio-economic/health-centres: List
+  - GET /api/socio-economic/health-centres/:id: Get one
+  - PUT /api/socio-economic/health-centres/:id: Update
+  - DELETE /api/socio-economic/health-centres/:id: Delete
+  Create body: { healthCentreName, location, dateBuilt, description? }
+- Sports (/api/socio-economic/sports)
+  - POST /api/socio-economic/sports: Create
+  - GET /api/socio-economic/sports: List
+  - GET /api/socio-economic/sports/:id: Get one
+  - PUT /api/socio-economic/sports/:id: Update
+  - DELETE /api/socio-economic/sports/:id: Delete
+  Create body: { sportName, location, condition, dateBuilt, description? }
+- Offices (/api/socio-economic/offices)
+  - POST /api/socio-economic/offices: Create
+  - GET /api/socio-economic/offices: List
+  - GET /api/socio-economic/offices/:id: Get one
+  - PUT /api/socio-economic/offices/:id: Update
+  - DELETE /api/socio-economic/offices/:id: Delete
+  Create body: { officeName, location, dateBuilt, description? }
+- Housing Materials (/api/socio-economic/housing/materials)
+  - POST /api/socio-economic/housing/materials: Create
+  - GET /api/socio-economic/housing/materials: List
+  - GET /api/socio-economic/housing/materials/:id: Get one
+  - PUT /api/socio-economic/housing/materials/:id: Update
+  - DELETE /api/socio-economic/housing/materials/:id: Delete
+  Create body: { materialType, location, distributedMaterials, dateDonated, targetBeneficiaries, currentBeneficiaries, description? }
+- Housing Toilets (/api/socio-economic/housing/toilets) [entity present; controller not found in repo snapshot]
+  - POST /api/socio-economic/housing/toilets: Create (expected)
+  - GET /api/socio-economic/housing/toilets: List (expected)
+  - GET /api/socio-economic/housing/toilets/:id: Get one (expected)
+  - PUT /api/socio-economic/housing/toilets/:id: Update (expected)
+  - DELETE /api/socio-economic/housing/toilets/:id: Delete (expected)
+  Expected create body: { toiletType, toiletsBuilt, location, dateDonated, targetBeneficiaries, currentBeneficiaries, description? }
+- Housing Houses (/api/socio-economic/housing/houses)
+  - POST /api/socio-economic/housing/houses: Create
+  - GET /api/socio-economic/housing/houses: List
+  - GET /api/socio-economic/housing/houses/:id: Get one
+  - PUT /api/socio-economic/housing/houses/:id: Update
+  - DELETE /api/socio-economic/housing/houses/:id: Delete
+  Create body: { houseCategory, houseOwner, location, dateBuilt, houseCondition, materials?, description? }
+- Housing Repairs (/api/socio-economic/housing/repairs)
+  - POST /api/socio-economic/housing/repairs: Create
+  - GET /api/socio-economic/housing/repairs: List
+  - GET /api/socio-economic/housing/repairs/:id: Get one
+  - PUT /api/socio-economic/housing/repairs/:id: Update
+  - DELETE /api/socio-economic/housing/repairs/:id: Delete
+  Create body: { houseOwner, location, dateRepaired, description? }
+- Village Housing (/api/socio-economic/housing/villages)
+  - POST /api/socio-economic/housing/villages: Create
+  - GET /api/socio-economic/housing/villages: List
+  - GET /api/socio-economic/housing/villages/:id: Get one
+  - PUT /api/socio-economic/housing/villages/:id: Update
+  - DELETE /api/socio-economic/housing/villages/:id: Delete
+  Create body: { villageName, location, totalHouses, dateBuilt, goodCondition?, badCondition?, badConditionDescription?, description? }
+- Other Projects (/api/socio-economic/other)
+  - POST /api/socio-economic/other: Create
+  - GET /api/socio-economic/other: List (optional query: category)
+  - GET /api/socio-economic/other/:id: Get one
+  - PUT /api/socio-economic/other/:id: Update
+  - DELETE /api/socio-economic/other/:id: Delete
+  Create body: { category, name, location, date, description? }
+- Water Pumps (/api/socio-economic/water-pumps) [entity present; controller not found]
+  - POST /api/socio-economic/water-pumps: Create (expected)
+  - GET /api/socio-economic/water-pumps: List (expected)
+  - GET /api/socio-economic/water-pumps/:id: Get one (expected)
+  - PUT /api/socio-economic/water-pumps/:id: Update (expected)
+  - DELETE /api/socio-economic/water-pumps/:id: Delete (expected)
+  Expected create body: { pumpName, location, dateBuilt, pumpCondition, description? }
+- Parking (/api/socio-economic/parking) [entity present; controller not found]
+  - POST /api/socio-economic/parking: Create (expected)
+  - GET /api/socio-economic/parking: List (expected)
+  - GET /api/socio-economic/parking/:id: Get one (expected)
+  - PUT /api/socio-economic/parking/:id: Update (expected)
+  - DELETE /api/socio-economic/parking/:id: Delete (expected)
+  Expected create body: { parkingName, carsSupported, location, dateBuilt, description? }
+
+Entities (TypeORM) - with data types
+- users: {
+  id: string,
+  email: string,
+  password: string,
+  name?: string,
+  firstName?: string,
+  lastName?: string,
+  role: 'ADMIN'|'USER'|'OTHER' (enum string),
+  isEmailVerified: boolean,
+  passwordResetToken?: string,
+  passwordResetExpires?: Date,
+  otp?: string,
+  otpExpiry?: Date,
+  createdAt: Date,
+  updatedAt: Date
+}
+- otps: {
+  id: string,
+  email: string,
+  code: string,
+  isUsed: boolean,
+  expiresAt: Date,
+  createdAt: Date,
+  updatedAt: Date
+}
+- reports: {
+  id: string,
+  title: string,
+  projectCategory: 'Conservation'|'Socio-Economic',
+  projectType: string,
+  reportType: 'Annual'|'Monthly'|'Custom',
+  dateRangeStart: Date,
+  dateRangeEnd: Date,
+  generatedBy: string,
+  status: 'In Progress'|'Completed',
+  filePath?: string,
+  createdAt: Date,
+  updatedAt: Date
+}
+- conservation_projects: {
+  id: string,
+  name: string,
+  description?: string,
+  location: string,
+  startDate?: Date,
+  endDate?: Date,
+  status: 'planned'|'in_progress'|'completed'|'on_hold'|'cancelled',
+  budget?: number,
+  contactPerson?: string,
+  contactEmail?: string,
+  contactPhone?: string,
+  notes?: string,
+  createdAt: Date,
+  updatedAt: Date
+}
+- bamboo_plantations: {
+  id: string,
+  distanceCovered: number,
+  location: string,
+  datePlanted: Date,
+  description?: string,
+  createdAt: Date,
+  updatedAt: Date
+}
+- buffalo_walls: {
+  id: string,
+  dateRepaired: Date,
+  cost: number,
+  createdAt: Date,
+  updatedAt: Date
+}
+- eu_funded_projects: {
+  id: string,
+  district: string,
+  location: string,
+  numberOfTrees: number,
+  datePlanted: Date,
+  description?: string,
+  targetBeneficiaries: number,
+  currentBeneficiaries: number,
+  createdAt: Date,
+  updatedAt: Date
+}
+- water_tanks: {
+  id: string,
+  tankType: string,
+  location: string,
+  numberOfTanks: number,
+  dateDonated: Date,
+  description?: string,
+  targetBeneficiaries: number,
+  currentBeneficiaries: number,
+  createdAt: Date,
+  updatedAt: Date
+}
+- tree_planting: {
+  id: string,
+  treeType: string,
+  location: string,
+  numberOfTrees: number,
+  datePlanted: Date,
+  description?: string,
+  targetBeneficiaries: number,
+  currentBeneficiaries: number,
+  createdAt: Date,
+  updatedAt: Date
+}
+- custom_projects: {
+  id: string,
+  projectName: string,
+  location: string,
+  startingDate: Date,
+  description?: string,
+  createdAt: Date,
+  updatedAt: Date
+}
+- custom_project_entries: {
+  id: string,
+  name: string,
+  number: number,
+  projectId: string,
+  createdAt: Date,
+  updatedAt: Date
+}
+- socio_other_projects: {
+  id: string,
+  category: string,
+  name: string,
+  location: string,
+  date: Date,
+  description?: string,
+  createdAt: Date,
+  updatedAt: Date
+}
+- education_infrastructures_entries: {
+  id: string,
+  schoolName: string,
+  location: string,
+  infrastructureType: string,
+  dateDonated: Date,
+  description?: string,
+  createdAt: Date,
+  updatedAt: Date
+}
+- education_materials_entries: {
+  id: string,
+  materialType: string,
+  location: string,
+  distributedMaterials: number,
+  dateDonated: Date,
+  targetBeneficiaries: number,
+  currentBeneficiaries: number,
+  description?: string,
+  createdAt: Date,
+  updatedAt: Date
+}
+- education_students_entries: {
+  id: string,
+  studentName: string,
+  studentLocation: string,
+  schoolName: string,
+  schoolLocation: string,
+  class: string,
+  fundingYears: number,
+  supportAmount: number,
+  date: Date,
+  description?: string,
+  createdAt: Date,
+  updatedAt: Date
+}
+- it_training_entries: {
+  id: string,
+  name: string,
+  location: string,
+  numPeople: number,
+  materials?: string,
+  trainingDuration?: number,
+  date: Date,
+  description?: string,
+  createdAt: Date,
+  updatedAt: Date
+}
+- health_centres_entries: {
+  id: string,
+  healthCentreName: string,
+  location: string,
+  dateBuilt: Date,
+  description?: string,
+  createdAt: Date,
+  updatedAt: Date
+}
+- sports_entries: {
+  id: string,
+  sportName: string,
+  location: string,
+  condition: string,
+  dateBuilt: Date,
+  description?: string,
+  createdAt: Date,
+  updatedAt: Date
+}
+- offices_entries: {
+  id: string,
+  officeName: string,
+  location: string,
+  dateBuilt: Date,
+  description?: string,
+  createdAt: Date,
+  updatedAt: Date
+}
+- housing_materials_entries: {
+  id: string,
+  materialType: string,
+  location: string,
+  distributedMaterials: number,
+  dateDonated: Date,
+  targetBeneficiaries: number,
+  currentBeneficiaries: number,
+  description?: string,
+  createdAt: Date,
+  updatedAt: Date
+}
+- housing_toilets_entries: {
+  id: string,
+  toiletType: string,
+  toiletsBuilt: number,
+  location: string,
+  dateDonated: Date,
+  targetBeneficiaries: number,
+  currentBeneficiaries: number,
+  description?: string,
+  createdAt: Date,
+  updatedAt: Date
+}
+- housing_houses_entries: {
+  id: string,
+  houseCategory: string,
+  houseOwner: string,
+  location: string,
+  dateBuilt: Date,
+  houseCondition: string,
+  materials?: string,
+  description?: string,
+  createdAt: Date,
+  updatedAt: Date
+}
+- housing_repairments_entries: {
+  id: string,
+  houseOwner: string,
+  location: string,
+  dateRepaired: Date,
+  description?: string,
+  createdAt: Date,
+  updatedAt: Date
+}
+- housing_villages_entries: {
+  id: string,
+  villageName: string,
+  location: string,
+  totalHouses: number,
+  dateBuilt: Date,
+  goodCondition: number,
+  badCondition: number,
+  badConditionDescription?: string,
+  description?: string,
+  createdAt: Date,
+  updatedAt: Date
+}
+- water_pumps_entries: {
+  id: string,
+  pumpName: string,
+  location: string,
+  dateBuilt: Date,
+  pumpCondition: string,
+  description?: string,
+  createdAt: Date,
+  updatedAt: Date
+}
+- parking_entries: {
+  id: string,
+  parkingName: string,
+  carsSupported: number,
+  location: string,
+  dateBuilt: Date,
+  description?: string,
+  createdAt: Date,
+  updatedAt: Date
+}
+- livestock_entries: {
+  id: string,
+  animalType: string,
+  location: string,
+  distributedAnimals: number,
+  deaths: number,
+  soldAnimals: number,
+  transferredAnimals: number,
+  currentlyOwned: number,
+  dateDonated: Date,
+  targetBeneficiaries: number,
+  currentBeneficiaries: number,
+  description?: string,
+  createdAt: Date,
+  updatedAt: Date
+}
+
+Auth and headers
+- Use Authorization: Bearer <JWT> for all (auth) endpoints.
+- Dates should be ISO strings unless otherwise indicated. Numbers are numeric.
+
+Notes
+- Some entities exist without controllers in the snapshot (water-pumps, parking, housing-toilets). Endpoints above are inferred for consistency.
+- Pagination/filters appear on conservation list endpoints; socio-economic lists currently have no explicit query parameters.
