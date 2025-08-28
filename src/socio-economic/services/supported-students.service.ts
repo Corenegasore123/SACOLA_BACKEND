@@ -12,13 +12,27 @@ export class EducationStudentsService {
     private readonly repo: Repository<EducationStudentsEntryData>,
   ) {}
 
-  async create(dto: CreateSupportedStudentDto): Promise<EducationStudentsEntryData> {
-    const entity = this.repo.create(dto as DeepPartial<EducationStudentsEntryData>);
+  async create(
+    dto: CreateSupportedStudentDto,
+  ): Promise<EducationStudentsEntryData> {
+    const entity = this.repo.create(
+      dto as DeepPartial<EducationStudentsEntryData>,
+    );
     return this.repo.save(entity);
   }
 
   findAll(): Promise<EducationStudentsEntryData[]> {
-    return this.repo.find({ order: { createdAt: 'DESC' } });
+    return this.repo.find({
+      where: { isArchived: false },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  findAllArchived(): Promise<EducationStudentsEntryData[]> {
+    return this.repo.find({
+      where: { isArchived: true },
+      order: { archivedAt: 'DESC' },
+    });
   }
 
   async findOne(id: string): Promise<EducationStudentsEntryData> {
@@ -27,16 +41,31 @@ export class EducationStudentsService {
     return entity;
   }
 
-  async update(id: string, dto: UpdateSupportedStudentDto): Promise<EducationStudentsEntryData> {
+  async update(
+    id: string,
+    dto: UpdateSupportedStudentDto,
+  ): Promise<EducationStudentsEntryData> {
     const entity = await this.findOne(id);
     Object.assign(entity, dto);
     return this.repo.save(entity);
   }
 
-  async remove(id: string): Promise<void> {
-    await this.findOne(id);
-    await this.repo.delete(id);
+  async remove(id: string): Promise<EducationStudentsEntryData> {
+    const entity = await this.findOne(id);
+    entity.isArchived = true;
+    entity.archivedAt = new Date();
+    return this.repo.save(entity);
+  }
+
+  async unarchive(id: string): Promise<EducationStudentsEntryData> {
+    const entity = await this.findOne(id);
+    entity.isArchived = false;
+    entity.archivedAt = null;
+    return this.repo.save(entity);
+  }
+
+  async delete(id: string): Promise<void> {
+    const entity = await this.findOne(id);
+    await this.repo.remove(entity);
   }
 }
-
-

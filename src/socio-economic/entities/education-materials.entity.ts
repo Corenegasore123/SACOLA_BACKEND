@@ -21,6 +21,10 @@ export class EducationMaterialsEntryData {
   @ApiProperty({ description: 'Location' })
   location: string;
 
+  @Column()
+  @ApiProperty({ description: 'School name' })
+  schoolName: string;
+
   @Column({ type: 'int' })
   @ApiProperty({ description: 'Distributed materials count' })
   distributedMaterials: number;

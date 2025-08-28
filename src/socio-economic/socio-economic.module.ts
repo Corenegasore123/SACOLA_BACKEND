@@ -55,6 +55,8 @@ import { ITTrainingController } from './controllers/it-training.controller';
 import { OtherProjectsController } from './controllers/other-projects.controller';
 import { ParkingController } from './controllers/parking.controller';
 import { WaterPumpsController } from './controllers/water-pumps.controller';
+import { HousingToiletsController } from './controllers/housing-toilets.controller';
+import { EmpowermentMicroFinanceController } from './controllers/empowerment-microfinance.controller';
 
 @Module({
   imports: [
@@ -96,6 +98,8 @@ import { WaterPumpsController } from './controllers/water-pumps.controller';
     OtherProjectsController,
     ParkingController,
     WaterPumpsController,
+    HousingToiletsController,
+    EmpowermentMicroFinanceController,
   ],
   providers: [
     LivestockService,

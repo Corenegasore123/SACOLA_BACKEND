@@ -1,7 +1,7 @@
 import { registerAs } from '@nestjs/config';
 
 export default registerAs('database', () => ({
-  type: 'postgres',  // Explicitly set type to postgres
+  type: 'postgres', // Explicitly set type to postgres
   host: process.env.DB_HOST || 'localhost',
   port: parseInt(process.env.DB_PORT || '5432', 10),
   username: process.env.DB_USERNAME || 'postgres',
@@ -10,8 +10,14 @@ export default registerAs('database', () => ({
   schema: process.env.DB_SCHEMA || 'public',
   entities: [__dirname + '/../**/*.entity{.ts,.js}'],
   // Auto-create tables for any environment except explicit production
-  synchronize: process.env.NODE_ENV !== 'production',
+  synchronize:
+    process.env.DATABASE_SYNCHRONIZE === 'true'
+      ? true  
+      : process.env.NODE_ENV !== 'production',
   logging: process.env.NODE_ENV !== 'production',
   // Add SSL configuration if needed for production
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  ssl:
+    process.env.NODE_ENV === 'production'
+      ? { rejectUnauthorized: false }
+      : false,
 }));

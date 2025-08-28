@@ -48,6 +48,14 @@ export class EducationStudentsEntryData {
   @ApiProperty({ description: 'Description', required: false })
   description?: string;
 
+  @Column({ type: 'boolean', default: false })
+  @ApiProperty({ description: 'Archived flag', required: false })
+  isArchived: boolean;
+
+  @Column({ type: 'timestamp', nullable: true })
+  @ApiProperty({ description: 'Archived at', required: false })
+  archivedAt?: Date | null;
+
   @CreateDateColumn()
   @ApiProperty({ description: 'Created at' })
   createdAt: Date;

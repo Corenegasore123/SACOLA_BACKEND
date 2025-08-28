@@ -25,6 +25,10 @@ export class LivestockEntryData {
   @ApiProperty({ description: 'Number initially distributed' })
   distributedAnimals: number;
 
+  @Column({ type: 'int', default: 0 })
+  @ApiProperty({ description: 'Number born', required: false })
+  born: number;
+
   @Column({ type: 'int' })
   @ApiProperty({ description: 'Number of deaths' })
   deaths: number;

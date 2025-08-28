@@ -11,6 +11,10 @@ export class CreateEducationMaterialsDto {
   location: string;
 
   @ApiProperty()
+  @IsString()
+  schoolName: string;
+
+  @ApiProperty()
   @IsInt()
   @Min(1)
   distributedMaterials: number;
@@ -19,7 +23,7 @@ export class CreateEducationMaterialsDto {
     description: 'Date when materials were donated (YYYY-MM-DD format)',
     example: '2024-01-15',
     format: 'date',
-    type: String
+    type: String,
   })
   @IsString()
   @Matches(/^\d{4}-\d{2}-\d{2}$/, {

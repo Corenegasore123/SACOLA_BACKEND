@@ -15,6 +15,11 @@ export class CreateLivestockDto {
   @Min(0)
   distributedAnimals: number;
 
+  @ApiProperty({ required: false })
+  @IsInt()
+  @Min(0)
+  born: number;
+
   @ApiProperty()
   @IsInt()
   @Min(0)
@@ -35,11 +40,11 @@ export class CreateLivestockDto {
   @Min(0)
   currentlyOwned: number;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Date donated (YYYY-MM-DD format)',
     example: '2024-01-15',
     format: 'date',
-    type: String
+    type: String,
   })
   @IsString()
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
