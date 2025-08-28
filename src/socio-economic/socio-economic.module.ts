@@ -17,6 +17,8 @@ import { ITTrainingEntryData } from './entities/it-training-center.entity';
 import { OtherProject } from './entities/other-project.entity';
 import { EmpowermentMicroFinanceEntryData } from './entities/empowerment-microfinance.entity';
 import { HousingToiletsEntryData } from './entities/housing-toilets.entity';
+import { ParkingEntryData } from './entities/parking.entity';
+import { WaterPumpsEntryData } from './entities/water-pumps.entity';
 
 import { LivestockService } from './services/livestock.service';
 import { HousingMaterialsService } from './services/housing-materials.service';
@@ -34,6 +36,8 @@ import { ITTrainingService } from './services/it-training.service';
 import { OtherProjectsService } from './services/other-projects.service';
 import { EmpowermentMicroFinanceService } from './services/empowerment-microfinance.service';
 import { HousingToiletsService } from './services/housing-toilets.service';
+import { ParkingService } from './services/parking.service';
+import { WaterPumpsService } from './services/water-pumps.service';
 
 import { LivestockController } from './controllers/livestock.controller';
 import { HousingMaterialsController } from './controllers/housing-materials.controller';
@@ -49,6 +53,8 @@ import { OfficesController } from './controllers/offices.controller';
 import { SportsController } from './controllers/sports.controller';
 import { ITTrainingController } from './controllers/it-training.controller';
 import { OtherProjectsController } from './controllers/other-projects.controller';
+import { ParkingController } from './controllers/parking.controller';
+import { WaterPumpsController } from './controllers/water-pumps.controller';
 
 @Module({
   imports: [
@@ -69,6 +75,8 @@ import { OtherProjectsController } from './controllers/other-projects.controller
       OtherProject,
       EmpowermentMicroFinanceEntryData,
       HousingToiletsEntryData,
+      ParkingEntryData,
+      WaterPumpsEntryData,
     ]),
   ],
   controllers: [
@@ -86,6 +94,8 @@ import { OtherProjectsController } from './controllers/other-projects.controller
     SportsController,
     ITTrainingController,
     OtherProjectsController,
+    ParkingController,
+    WaterPumpsController,
   ],
   providers: [
     LivestockService,
@@ -104,8 +114,8 @@ import { OtherProjectsController } from './controllers/other-projects.controller
     OtherProjectsService,
     EmpowermentMicroFinanceService,
     HousingToiletsService,
+    ParkingService,
+    WaterPumpsService,
   ],
 })
 export class SocioEconomicModule {}
-
-
