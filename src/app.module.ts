@@ -11,6 +11,7 @@ import { AppService } from './app.service';
 import databaseConfig from './config/database.config';
 import jwtConfig from './config/jwt.config';
 import { ProfileModule } from './profile/profile.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { ProfileModule } from './profile/profile.module';
     OtpModule,
     ProfileModule,
     SocioEconomicModule,
+    AnalyticsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
