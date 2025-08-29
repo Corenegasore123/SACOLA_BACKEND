@@ -1,4 +1,4 @@
-Sacola API - Endpoints and Entities for Frontend Integration
+the Sacola API - Endpoints and Entities for Frontend Integration
 
 Base URL: https://sacola-backend-test.onrender.com/
 Auth: Most endpoints under api/** require Bearer JWT. Auth endpoints under /auth are public unless noted.

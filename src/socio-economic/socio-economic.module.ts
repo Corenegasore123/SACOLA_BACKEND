@@ -19,6 +19,7 @@ import { EmpowermentMicroFinanceEntryData } from './entities/empowerment-microfi
 import { HousingToiletsEntryData } from './entities/housing-toilets.entity';
 import { ParkingEntryData } from './entities/parking.entity';
 import { WaterPumpsEntryData } from './entities/water-pumps.entity';
+import { WorkersEntryData } from './entities/workers.entity';
 
 import { LivestockService } from './services/livestock.service';
 import { HousingMaterialsService } from './services/housing-materials.service';
@@ -38,6 +39,7 @@ import { EmpowermentMicroFinanceService } from './services/empowerment-microfina
 import { HousingToiletsService } from './services/housing-toilets.service';
 import { ParkingService } from './services/parking.service';
 import { WaterPumpsService } from './services/water-pumps.service';
+import { WorkersService } from './services/workers.service';
 
 import { LivestockController } from './controllers/livestock.controller';
 import { HousingMaterialsController } from './controllers/housing-materials.controller';
@@ -57,6 +59,7 @@ import { ParkingController } from './controllers/parking.controller';
 import { WaterPumpsController } from './controllers/water-pumps.controller';
 import { HousingToiletsController } from './controllers/housing-toilets.controller';
 import { EmpowermentMicroFinanceController } from './controllers/empowerment-microfinance.controller';
+import { WorkersController } from './controllers/workers.controller';
 
 @Module({
   imports: [
@@ -79,6 +82,7 @@ import { EmpowermentMicroFinanceController } from './controllers/empowerment-mic
       HousingToiletsEntryData,
       ParkingEntryData,
       WaterPumpsEntryData,
+      WorkersEntryData,
     ]),
   ],
   controllers: [
@@ -100,6 +104,7 @@ import { EmpowermentMicroFinanceController } from './controllers/empowerment-mic
     WaterPumpsController,
     HousingToiletsController,
     EmpowermentMicroFinanceController,
+    WorkersController,
   ],
   providers: [
     LivestockService,
@@ -120,6 +125,7 @@ import { EmpowermentMicroFinanceController } from './controllers/empowerment-mic
     HousingToiletsService,
     ParkingService,
     WaterPumpsService,
+    WorkersService,
   ],
 })
 export class SocioEconomicModule {}
