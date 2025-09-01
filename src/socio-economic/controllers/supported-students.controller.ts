@@ -21,28 +21,30 @@ import {
 import { EducationStudentsService } from '../services/supported-students.service';
 import { CreateSupportedStudentDto } from '../dto/create-supported-student.dto';
 import { UpdateSupportedStudentDto } from '../dto/update-supported-student.dto';
+import { Roles } from '../../auth/decorators/roles.decorator';
+import { RolesGuard } from '../../auth/guards/roles.guard';
+import { UserRole } from '../../shared/enums/user-role.enum';
 
 @ApiTags('socio-economic/education/students')
 @ApiBearerAuth()
-@UseGuards(AuthGuard('jwt'))
 @Controller('api/socio-economic/education/students')
+@UseGuards(AuthGuard('jwt'), RolesGuard)
 export class EducationStudentsController {
   constructor(private readonly service: EducationStudentsService) {}
 
   @Post()
+  @Roles(UserRole.USER)
   @ApiOperation({ summary: 'Create a new supported student entry' })
-  @ApiResponse({
-    status: 201,
-    description: 'Student entry created successfully',
-  })
+  @ApiResponse({ status: 201, description: 'Student entry created successfully' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   create(@Body() dto: CreateSupportedStudentDto) {
     return this.service.create(dto);
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all active supported student entries' })
-  @ApiResponse({ status: 200, description: 'List of active student entries' })
+  @Roles(UserRole.VIEWER, UserRole.USER)
+  @ApiOperation({ summary: 'Get all supported student entries' })
+  @ApiResponse({ status: 200, description: 'List of student entries retrieved successfully' })
   findAll() {
     return this.service.findAll();
   }
@@ -55,22 +57,22 @@ export class EducationStudentsController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get a specific supported student entry by ID' })
+  @Roles(UserRole.VIEWER, UserRole.USER)
+  @ApiOperation({ summary: 'Get a specific supported student entry' })
   @ApiParam({ name: 'id', description: 'Student entry ID' })
-  @ApiResponse({ status: 200, description: 'Student entry found' })
+  @ApiResponse({ status: 200, description: 'Student entry retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Student entry not found' })
   findOne(@Param('id') id: string) {
     return this.service.findOne(id);
   }
 
   @Put(':id')
+  @Roles(UserRole.USER)
   @ApiOperation({ summary: 'Update a supported student entry' })
   @ApiParam({ name: 'id', description: 'Student entry ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Student entry updated successfully',
-  })
+  @ApiResponse({ status: 200, description: 'Student entry updated successfully' })
   @ApiResponse({ status: 404, description: 'Student entry not found' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   update(@Param('id') id: string, @Body() dto: UpdateSupportedStudentDto) {
     return this.service.update(id, dto);
   }
@@ -101,18 +103,13 @@ export class EducationStudentsController {
   }
 
   @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({
-    summary:
-      'Permanently delete a supported student entry (works for both active and archived)',
-  })
-  @ApiParam({ name: 'id', description: 'Student entry ID to delete' })
-  @ApiResponse({
-    status: 204,
-    description: 'Student entry deleted successfully',
-  })
+  @Roles(UserRole.USER)
+  @ApiOperation({ summary: 'Delete a supported student entry' })
+  @ApiParam({ name: 'id', description: 'Student entry ID' })
+  @ApiResponse({ status: 200, description: 'Student entry deleted successfully' })
   @ApiResponse({ status: 404, description: 'Student entry not found' })
-  async delete(@Param('id') id: string) {
-    await this.service.delete(id);
+  @HttpCode(HttpStatus.OK)
+  remove(@Param('id') id: string) {
+    return this.service.remove(id);
   }
 }

@@ -29,7 +29,7 @@ export class User {
   })
   role: UserRole;
 
-  @Column()
+  @Column({ default: false })
   isEmailVerified: boolean;
 
   @Column({ nullable: true })
@@ -69,3 +69,5 @@ export class User {
     return `${this.firstName || ''} ${this.lastName || ''}`.trim();
   }
 }
+
+

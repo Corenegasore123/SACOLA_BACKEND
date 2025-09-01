@@ -47,10 +47,22 @@ export class RegisterDto {
   lastName?: string;
 
   @ApiProperty({
-    description: 'User role',
+    description: 'User role - USER has full access to do everything and edit, VIEWER can only view',
     enum: UserRole,
     default: UserRole.USER,
     required: false,
+    examples: {
+      user: {
+        summary: 'Full access user',
+        description: 'User with full access to create, read, update, and delete',
+        value: UserRole.USER
+      },
+      viewer: {
+        summary: 'Read-only viewer',
+        description: 'Viewer with read-only access (can only view data)',
+        value: UserRole.VIEWER
+      }
+    }
   })
   @IsEnum(UserRole, { message: 'Invalid user role' })
   @IsOptional()

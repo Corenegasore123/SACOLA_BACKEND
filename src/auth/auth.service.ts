@@ -118,8 +118,7 @@ export class AuthService {
   async requestPasswordReset(requestResetDto: RequestResetDto): Promise<{ message: string }> {
     const user = await this.userRepository.findOne({ where: { email: requestResetDto.email } });
     if (!user) {
-      // For security reasons, don't reveal if the user exists or not
-      return { message: 'If the email exists, a reset OTP has been sent' };
+      throw new NotFoundException('Email is not registered in our system');
     }
 
     // Generate OTP for password reset
